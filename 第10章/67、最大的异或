@@ -1,0 +1,58 @@
+[题目链接](https://leetcode-cn.com/problems/ms70jA/)
+
+#### 思路
++ 这道题暴力法就是两两异或，时间复杂度是O(n²)，但是可以用前缀和来优化~
++ 对于一个数X，如果有两个整数m n ，m和n相比，某高位和x的异或结果是1，那么肯定m^x > n^x,基于此我们可以得知想要异或结果大，最好是高位异或结果是1
++ 所以我们可以建立前缀树，只不过这个时候不是以小写英文字母作为结点，而是以0和1，建立的基础是整数的二进制位数，并且高位先建立，**因为我们优先选择高位不同的**
++ 所以我们首先利用nums数组建立前缀树，这个过程是O(n)
++ 然后再次遍历nums数组，每个num都通过前缀树选择异或最大值，具体选择方法为，如果某一位是x，优先判断前缀树当前节点是否存在和x异或位1的子结点，如果有就选择他，如果没有就选择x
+
+```java
+class Solution {
+    class TrieNode {
+        TrieNode[] children;
+
+        TrieNode() {
+            children = new TrieNode[2];
+        }
+    }
+
+    private TrieNode root;
+    int max;
+
+    void buildTree(int[] nums) {
+        root = new TrieNode();
+
+        for (int num : nums) {
+            TrieNode cur = root;
+            for (int i = 31; i >= 0; i--) {
+                int bit = num >> i & 1;
+                if (null == cur.children[bit])
+                    cur.children[bit] = new TrieNode();
+                cur = cur.children[bit];
+            }
+        }
+    }
+
+    public int findMaximumXOR(int[] nums) {
+        buildTree(nums);
+
+        for (int num : nums) {
+            int xor = 0;
+            TrieNode cur = root;
+
+            for (int i = 31; i >= 0; i--) {
+                xor <<= 1;
+                int bit = num >> i & 1;
+                if (null != cur.children[1 - bit]) {
+                    xor += 1;
+                    cur = cur.children[1 - bit];
+                }else
+                    cur = cur.children[bit];
+            }
+            max = Math.max(xor,max);
+        }
+        return max;
+    }
+}
+```
